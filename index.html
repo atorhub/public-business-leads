@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Public Business Directory</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+
+<h2>Public Business Directory</h2>
+
+<table id="data-table">
+  <thead>
+    <tr>
+      <th>Business Name</th>
+      <th>Location</th>
+      <th>Business Type</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  const sheetURL = "PASTE_SHEET_LINK_HERE";
+
+  fetch(sheetURL)
+    .then(res => res.text())
+    .then(text => {
+      const rows = text.split("\n").slice(1);
+      const tbody = document.querySelector("#data-table tbody");
+
+      rows.forEach(row => {
+        const cols = row.split(",");
+        if (cols.length >= 4) {
+          const tr = document.createElement("tr");
+          cols.slice(0,4).forEach(col => {
+            const td = document.createElement("td");
+            td.textContent = col;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+      });
+    });
+</script>
+
+</body>
+</html>
