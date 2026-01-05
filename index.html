@@ -2,60 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Public Business Directory</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 20px;
+      background: #ffffff;
+      margin: 0;
+      padding: 16px;
     }
 
     h1 {
       text-align: center;
+      margin-bottom: 20px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
+      max-width: 900px;
+      margin: auto;
     }
 
     th, td {
       border: 1px solid #ddd;
       padding: 10px;
       text-align: left;
+      font-size: 14px;
     }
 
     th {
-      background: #222;
+      background: #111;
       color: #fff;
     }
 
     tr:nth-child(even) {
-      background: #f2f2f2;
+      background: #f9f9f9;
     }
 
-    .status-Active {
-      color: green;
+    .badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 6px;
+      font-size: 10px;
       font-weight: bold;
-    }
-
-    .status-New {
-      color: orange;
-      font-weight: bold;
-    }
-
-    .status-Inactive {
-      color: red;
-      font-weight: bold;
+      color: #fff;
+      background: #ff9800;
+      border-radius: 4px;
+      vertical-align: middle;
     }
 
     footer {
-      margin-top: 20px;
       text-align: center;
       font-size: 12px;
       color: #666;
+      margin-top: 12px;
     }
   </style>
 </head>
@@ -64,7 +66,7 @@
 
   <h1>Public Business Directory</h1>
 
-  <table id="businessTable">
+  <table>
     <thead>
       <tr>
         <th>Business Name</th>
@@ -73,8 +75,10 @@
         <th>Status</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Data loads here -->
+    <tbody id="table-body">
+      <tr>
+        <td colspan="4">Loading data…</td>
+      </tr>
     </tbody>
   </table>
 
@@ -83,34 +87,48 @@
   </footer>
 
   <script>
-    const sheetCSV =
-      "https://docs.google.com/spreadsheets/d/1W03edYxdlwpisKvIQNu4sXIM10EYUiFO6dmj2f9V4bo/export?format=csv&sheet=public_data";
+    const SHEET_URL =
+      "https://docs.google.com/spreadsheets/d/1W03edYxdlwpisKvIQNu4sXIM10EYUiFO6dmj2f9V4bo/gviz/tq?tqx=out:json";
 
-    fetch(sheetCSV)
-      .then(response => response.text())
-      .then(csv => {
-        const rows = csv.trim().split("\n").slice(1);
-        const tbody = document.querySelector("#businessTable tbody");
+    fetch(SHEET_URL)
+      .then(res => res.text())
+      .then(text => {
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        const tbody = document.getElementById("table-body");
+        tbody.innerHTML = "";
 
         rows.forEach(row => {
-          const cols = row.split(",");
+          if (!row.c || !row.c[0]) return;
 
-          if (cols.length < 4) return;
+          const businessName = row.c[0]?.v || "";
+          const location = row.c[4]?.v || "";
+          const businessType = row.c[5]?.v || "";
+          const status = row.c[8]?.v || "";
+          const featured = row.c[11]?.v || "";
+
+          let nameCell = businessName;
+
+          if (featured.toLowerCase() === "yes") {
+            nameCell += `<span class="badge">FEATURED</span>`;
+          }
 
           const tr = document.createElement("tr");
-
           tr.innerHTML = `
-            <td>${cols[0]}</td>
-            <td>${cols[1]}</td>
-            <td>${cols[2]}</td>
-            <td class="status-${cols[3]}">${cols[3]}</td>
+            <td>${nameCell}</td>
+            <td>${location}</td>
+            <td>${businessType}</td>
+            <td>${status}</td>
           `;
 
           tbody.appendChild(tr);
         });
       })
       .catch(err => {
-        console.error("Failed to load data", err);
+        document.getElementById("table-body").innerHTML =
+          "<tr><td colspan='4'>Failed to load data</td></tr>";
+        console.error(err);
       });
   </script>
 
