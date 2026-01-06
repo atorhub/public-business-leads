@@ -7,55 +7,62 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f4f6f8;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
 
     .card {
       background: #fff;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 16px;
       margin-bottom: 16px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: relative;
     }
 
-    .card h2 {
-      margin: 0 0 8px;
+    .name {
       font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
     }
 
-    .meta {
-      font-size: 14px;
+    .row {
       color: #555;
-      margin-bottom: 6px;
+      margin: 4px 0;
     }
 
     .badge {
       display: inline-block;
+      background: #ffe3e3;
+      color: #b30000;
       padding: 4px 10px;
-      border-radius: 20px;
+      border-radius: 999px;
       font-size: 12px;
       margin-top: 8px;
     }
 
     .featured {
-      background: #ffe3e3;
-      color: #c92a2a;
-      font-weight: bold;
+      border: 2px solid #ffb703;
+      background: #fff9e6;
     }
 
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 13px;
-      color: #777;
+    .featured-tag {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #ffb703;
+      color: #000;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -63,63 +70,62 @@
 <body>
 
   <h1>Public Business Directory</h1>
-  <div id="directory"></div>
-
-  <footer>
-    Data updated automatically · Powered by Google Sheets
-  </footer>
+  <div id="list"></div>
 
 <script>
 const SHEET_ID = "1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c";
 const SHEET_NAME = "Public_Directory1";
 
-const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}`;
+const URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?` +
+  `tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-fetch(url)
+fetch(URL)
   .then(res => res.text())
   .then(text => {
     const json = JSON.parse(text.substring(47).slice(0, -2));
-    const cols = json.table.cols.map(c => c.label.trim());
-    const rows = json.table.rows.map(r =>
-      r.c.map(c => (c ? c.v : ""))
-    );
+    const cols = json.table.cols.map(c => c.label);
+    const rows = json.table.rows;
 
-    const colIndex = name => cols.indexOf(name);
+    const data = rows.map(r => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col] = r.c[i] ? r.c[i].v : "";
+      });
+      return obj;
+    });
 
-    const businesses = rows.map(row => ({
-      name: row[colIndex("Bussiness_Name")] || "Unnamed Business",
-      location: row[colIndex("Location")] || "-",
-      type: row[colIndex("Bussiness_Type")] || "-",
-      status: row[colIndex("Status")] || "-",
-      featured: (row[colIndex("Featured")] || "").toString().toUpperCase()
-    }));
-
-    // 🔥 FEATURED SORTING (THIS IS THE CORE FIX)
-    businesses.sort((a, b) => {
-      if (a.featured === "YES" && b.featured !== "YES") return -1;
-      if (a.featured !== "YES" && b.featured === "YES") return 1;
+    // FEATURED FIRST
+    data.sort((a, b) => {
+      if (a.Featured === "YES" && b.Featured !== "YES") return -1;
+      if (a.Featured !== "YES" && b.Featured === "YES") return 1;
       return 0;
     });
 
-    const container = document.getElementById("directory");
+    const container = document.getElementById("list");
 
-    businesses.forEach(b => {
+    data.forEach(b => {
       const card = document.createElement("div");
-      card.className = "card";
+      card.className = "card" + (b.Featured === "YES" ? " featured" : "");
 
       card.innerHTML = `
-        <h2>${b.name}</h2>
-        <div class="meta"><strong>Type:</strong> ${b.type}</div>
-        <div class="meta"><strong>Location:</strong> ${b.location}</div>
-        <div class="meta"><strong>Status:</strong> ${b.status}</div>
-        ${b.featured === "YES" ? `<span class="badge featured">Featured</span>` : ""}
+        ${b.Featured === "YES" ? `<div class="featured-tag">FEATURED</div>` : ""}
+
+        <div class="name">${b.Bussiness_Name || "Unnamed Business"}</div>
+
+        <div class="row"><strong>Type:</strong> ${b.Bussiness_Type || "-"}</div>
+        <div class="row"><strong>Location:</strong> ${b.Location || "-"}</div>
+        <div class="row"><strong>Status:</strong> ${b.Status || "-"}</div>
+
+        ${b.Bussiness_Type ? `<span class="badge">${b.Bussiness_Type}</span>` : ""}
       `;
 
       container.appendChild(card);
     });
   })
   .catch(err => {
-    document.getElementById("directory").innerHTML = "Failed to load directory.";
+    document.getElementById("list").innerHTML =
+      "<p>Failed to load directory.</p>";
     console.error(err);
   });
 </script>
