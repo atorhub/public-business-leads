@@ -2,134 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Public Business Directory</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
       margin: 0;
-      padding: 16px;
+      padding: 20px;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .directory {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
+      margin-bottom: 30px;
     }
 
     .card {
       background: #fff;
-      padding: 14px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      position: relative;
-    }
-
-    .featured {
-      border: 2px solid #ff9800;
-    }
-
-    .badge {
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      background: #ff9800;
-      color: #fff;
-      padding: 4px 8px;
-      font-size: 12px;
       border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
 
-    .name {
-      font-size: 18px;
-      font-weight: bold;
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
       margin-bottom: 6px;
     }
 
-    .type, .location, .phone {
-      font-size: 14px;
-      margin-bottom: 4px;
-      color: #444;
-    }
-
-    .status {
-      margin-top: 8px;
-      font-size: 12px;
-      padding: 4px 8px;
+    .badge {
       display: inline-block;
-      border-radius: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-top: 8px;
     }
 
-    .active {
-      background: #e8f5e9;
-      color: #2e7d32;
+    .featured {
+      background: #ffe3e3;
+      color: #c92a2a;
+      font-weight: bold;
     }
 
-    .inactive {
-      background: #ffebee;
-      color: #c62828;
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 13px;
+      color: #777;
     }
   </style>
 </head>
+
 <body>
 
-<h1>Public Business Directory</h1>
+  <h1>Public Business Directory</h1>
+  <div id="directory"></div>
 
-<div id="directory" class="directory"></div>
+  <footer>
+    Data updated automatically · Powered by Google Sheets
+  </footer>
 
 <script>
-const CSV_URL =
-  "https://docs.google.com/spreadsheets/d/1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c/gviz/tq?tqx=out:csv&sheet=Public_Directory1";
+const SHEET_ID = "1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c";
+const SHEET_NAME = "Public_Directory1";
 
-fetch(CSV_URL)
+const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}`;
+
+fetch(url)
   .then(res => res.text())
-  .then(csv => {
-    const rows = csv.trim().split("\n").map(r =>
-      r.split(",").map(v => v.replace(/^"|"$/g, "").trim())
+  .then(text => {
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const cols = json.table.cols.map(c => c.label.trim());
+    const rows = json.table.rows.map(r =>
+      r.c.map(c => (c ? c.v : ""))
     );
 
-    const headers = rows[0];
-    const data = rows.slice(1);
+    const colIndex = name => cols.indexOf(name);
+
+    const businesses = rows.map(row => ({
+      name: row[colIndex("Bussiness_Name")] || "Unnamed Business",
+      location: row[colIndex("Location")] || "-",
+      type: row[colIndex("Bussiness_Type")] || "-",
+      status: row[colIndex("Status")] || "-",
+      featured: (row[colIndex("Featured")] || "").toString().toUpperCase()
+    }));
+
+    // 🔥 FEATURED SORTING (THIS IS THE CORE FIX)
+    businesses.sort((a, b) => {
+      if (a.featured === "YES" && b.featured !== "YES") return -1;
+      if (a.featured !== "YES" && b.featured === "YES") return 1;
+      return 0;
+    });
 
     const container = document.getElementById("directory");
 
-    data.forEach(row => {
-      const record = {};
-      headers.forEach((h, i) => record[h] = row[i] || "");
-
+    businesses.forEach(b => {
       const card = document.createElement("div");
       card.className = "card";
 
-      if (record.Featured?.toLowerCase() === "yes") {
-        card.classList.add("featured");
-        card.innerHTML += `<div class="badge">Featured</div>`;
-      }
-
-      card.innerHTML += `
-        <div class="name">${record.Business_Name || "Unnamed Business"}</div>
-        <div class="type">Type: ${record.Business_Type || "-"}</div>
-        <div class="location">Location: ${record.Location || "-"}</div>
-        <div class="phone">Phone: ${record.Phone || "-"}</div>
-        <div class="status ${
-          record.Status?.toLowerCase() === "active" ? "active" : "inactive"
-        }">
-          ${record.Status || "Unknown"}
-        </div>
+      card.innerHTML = `
+        <h2>${b.name}</h2>
+        <div class="meta"><strong>Type:</strong> ${b.type}</div>
+        <div class="meta"><strong>Location:</strong> ${b.location}</div>
+        <div class="meta"><strong>Status:</strong> ${b.status}</div>
+        ${b.featured === "YES" ? `<span class="badge featured">Featured</span>` : ""}
       `;
 
       container.appendChild(card);
     });
   })
   .catch(err => {
-    document.getElementById("directory").innerHTML =
-      "<p>Failed to load directory data.</p>";
+    document.getElementById("directory").innerHTML = "Failed to load directory.";
     console.error(err);
   });
 </script>
