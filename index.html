@@ -2,133 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Public Business Directory</title>
-
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 16px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      position: relative;
-    }
-
-    .name {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .row {
-      color: #555;
-      margin: 4px 0;
-    }
-
-    .badge {
-      display: inline-block;
-      background: #ffe3e3;
-      color: #b30000;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .featured {
-      border: 2px solid #ffb703;
-      background: #fff9e6;
-    }
-
-    .featured-tag {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: #ffb703;
-      color: #000;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 8px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-  <h1>Public Business Directory</h1>
-  <div id="list"></div>
+<h1>Public Business Directory</h1>
 
-<script>
-const SHEET_ID = "1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c";
-const SHEET_NAME = "Public_Directory1";
+<div id="directory"></div>
 
-const URL =
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?` +
-  `tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-
-fetch(URL)
-  .then(res => res.text())
-  .then(text => {
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    const cols = json.table.cols.map(c => c.label);
-    const rows = json.table.rows;
-
-    const data = rows.map(r => {
-      const obj = {};
-      cols.forEach((col, i) => {
-        obj[col] = r.c[i] ? r.c[i].v : "";
-      });
-      return obj;
-    });
-
-    // FEATURED FIRST
-    data.sort((a, b) => {
-      if (a.Featured === "YES" && b.Featured !== "YES") return -1;
-      if (a.Featured !== "YES" && b.Featured === "YES") return 1;
-      return 0;
-    });
-
-    const container = document.getElementById("list");
-
-    data.forEach(b => {
-      const card = document.createElement("div");
-      card.className = "card" + (b.Featured === "YES" ? " featured" : "");
-
-      card.innerHTML = `
-        ${b.Featured === "YES" ? `<div class="featured-tag">FEATURED</div>` : ""}
-
-        <div class="name">${b.Bussiness_Name || "Unnamed Business"}</div>
-
-        <div class="row"><strong>Type:</strong> ${b.Bussiness_Type || "-"}</div>
-        <div class="row"><strong>Location:</strong> ${b.Location || "-"}</div>
-        <div class="row"><strong>Status:</strong> ${b.Status || "-"}</div>
-
-        ${b.Bussiness_Type ? `<span class="badge">${b.Bussiness_Type}</span>` : ""}
-      `;
-
-      container.appendChild(card);
-    });
-  })
-  .catch(err => {
-    document.getElementById("list").innerHTML =
-      "<p>Failed to load directory.</p>";
-    console.error(err);
-  });
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
