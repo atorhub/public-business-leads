@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Public Business Directory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #ffffff;
+      background: #f4f6f8;
       margin: 0;
       padding: 16px;
     }
@@ -18,109 +18,119 @@
       margin-bottom: 20px;
     }
 
-    table {
-      width: 100%;
-      max-width: 900px;
-      margin: auto;
-      border-collapse: collapse;
+    .directory {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
     }
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      font-size: 14px;
-      text-align: left;
+    .card {
+      background: #fff;
+      padding: 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      position: relative;
     }
 
-    th {
-      background: #111;
-      color: #fff;
-    }
-
-    tr:nth-child(even) {
-      background: #f9f9f9;
+    .featured {
+      border: 2px solid #ff9800;
     }
 
     .badge {
-      margin-left: 6px;
-      padding: 2px 6px;
-      font-size: 10px;
-      font-weight: bold;
-      color: #fff;
+      position: absolute;
+      top: -10px;
+      right: -10px;
       background: #ff9800;
-      border-radius: 4px;
+      color: #fff;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 12px;
     }
 
-    footer {
-      text-align: center;
+    .name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .type, .location, .phone {
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #444;
+    }
+
+    .status {
+      margin-top: 8px;
       font-size: 12px;
-      color: #666;
-      margin-top: 12px;
+      padding: 4px 8px;
+      display: inline-block;
+      border-radius: 6px;
+    }
+
+    .active {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .inactive {
+      background: #ffebee;
+      color: #c62828;
     }
   </style>
 </head>
-
 <body>
 
 <h1>Public Business Directory</h1>
 
-<table>
-  <thead>
-    <tr>
-      <th>Business Name</th>
-      <th>Location</th>
-      <th>Business Type</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="table-body">
-    <tr><td colspan="4">Loading…</td></tr>
-  </tbody>
-</table>
-
-<footer>
-  Data updated automatically · Powered by Google Sheets
-</footer>
+<div id="directory" class="directory"></div>
 
 <script>
-const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1W03edYxdlwpisKvIQNu4sXIM10EYUiFO6dmj2f9V4bo/gviz/tq?tqx=out:json";
+const CSV_URL =
+  "https://docs.google.com/spreadsheets/d/1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c/gviz/tq?tqx=out:csv&sheet=Public_Directory1";
 
-fetch(SHEET_URL)
+fetch(CSV_URL)
   .then(res => res.text())
-  .then(text => {
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    const rows = json.table.rows;
-    const tbody = document.getElementById("table-body");
-    tbody.innerHTML = "";
+  .then(csv => {
+    const rows = csv.trim().split("\n").map(r =>
+      r.split(",").map(v => v.replace(/^"|"$/g, "").trim())
+    );
 
-    rows.forEach(r => {
-      if (!r.c || !r.c[0]) return;
+    const headers = rows[0];
+    const data = rows.slice(1);
 
-      const businessName = r.c[0]?.v || "";
-      const status       = r.c[1]?.v || "";   // Status
-      const location     = r.c[9]?.v || "";   // Location
-      const businessType = r.c[10]?.v || "";  // Business Type
-      const featured     = r.c[11]?.v || "";  // Featured
+    const container = document.getElementById("directory");
 
-      let nameCell = businessName;
-      if (featured.toLowerCase() === "yes") {
-        nameCell += `<span class="badge">FEATURED</span>`;
+    data.forEach(row => {
+      const record = {};
+      headers.forEach((h, i) => record[h] = row[i] || "");
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      if (record.Featured?.toLowerCase() === "yes") {
+        card.classList.add("featured");
+        card.innerHTML += `<div class="badge">Featured</div>`;
       }
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${nameCell}</td>
-        <td>${location}</td>
-        <td>${businessType}</td>
-        <td>${status}</td>
+      card.innerHTML += `
+        <div class="name">${record.Business_Name || "Unnamed Business"}</div>
+        <div class="type">Type: ${record.Business_Type || "-"}</div>
+        <div class="location">Location: ${record.Location || "-"}</div>
+        <div class="phone">Phone: ${record.Phone || "-"}</div>
+        <div class="status ${
+          record.Status?.toLowerCase() === "active" ? "active" : "inactive"
+        }">
+          ${record.Status || "Unknown"}
+        </div>
       `;
-      tbody.appendChild(tr);
+
+      container.appendChild(card);
     });
   })
-  .catch(() => {
-    document.getElementById("table-body").innerHTML =
-      "<tr><td colspan='4'>Failed to load data</td></tr>";
+  .catch(err => {
+    document.getElementById("directory").innerHTML =
+      "<p>Failed to load directory data.</p>";
+    console.error(err);
   });
 </script>
 
