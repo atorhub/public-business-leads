@@ -1,23 +1,55 @@
 body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 16px;
+}
+
+/* Centered container like before */
+#directory {
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 h1 {
-  margin-bottom: 15px;
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 24px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+/* Bigger, premium cards */
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
 }
 
-th {
-  background: #f0f0f0;
+.card p {
+  margin: 6px 0;
+  font-size: 16px;
+  color: #444;
+}
+
+/* Featured styling */
+.card.featured {
+  border-left: 6px solid #ff9800;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b71c1c;
+  background: #ffe4e4;
+  border-radius: 999px;
 }
