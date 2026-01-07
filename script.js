@@ -1,59 +1,62 @@
 const SHEET_ID = "1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c";
 const SHEET_NAME = "Public_Directory1";
 
-const URL = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
+const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
 fetch(URL)
-  .then(res => res.json())
-  .then(data => renderDirectory(data))
+  .then(res => res.text())
+  .then(text => {
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const cols = json.table.cols.map(c =>
+      c.label.trim().toLowerCase()
+    );
+    const rows = json.table.rows.map(r =>
+      r.c.map(c => (c ? c.v : ""))
+    );
+
+    const index = name =>
+      cols.findIndex(c => c.replace(/\s+/g, "_") === name);
+
+    const idxName = index("business_name");
+    const idxLocation = index("location");
+    const idxType = index("business_type");
+    const idxStatus = index("status");
+    const idxFeatured = index("featured");
+
+    const data = rows.map(r => ({
+      name: r[idxName] || "Unnamed Business",
+      location: r[idxLocation] || "-",
+      type: r[idxType] || "-",
+      status: r[idxStatus] || "-",
+      featured: (r[idxFeatured] || "").toString().toLowerCase() === "yes"
+    }));
+
+    data.sort((a, b) => b.featured - a.featured);
+
+    render(data);
+  })
   .catch(err => {
-    document.getElementById("directory").innerText = "Failed to load data";
+    document.getElementById("directory").innerHTML =
+      "<p>Failed loading directory.</p>";
     console.error(err);
   });
 
-function renderDirectory(rows) {
+function render(list) {
   const container = document.getElementById("directory");
   container.innerHTML = "";
 
-  const featured = [];
-  const normal = [];
+  list.forEach(b => {
+    const card = document.createElement("div");
+    card.className = "card" + (b.featured ? " featured" : "");
 
-  rows.forEach(row => {
-    const item = normalizeRow(row);
+    card.innerHTML = `
+      <h2>${b.name}</h2>
+      <p><strong>Type:</strong> ${b.type}</p>
+      <p><strong>Location:</strong> ${b.location}</p>
+      <p><strong>Status:</strong> ${b.status}</p>
+      ${b.featured ? `<span class="badge">Featured</span>` : ""}
+    `;
 
-    if (item.featured === "YES") {
-      featured.push(item);
-    } else {
-      normal.push(item);
-    }
+    container.appendChild(card);
   });
-
-  [...featured, ...normal].forEach(item => {
-    container.appendChild(createCard(item));
-  });
-}
-
-function normalizeRow(row) {
-  return {
-    name: row.Business_Name || "Unnamed Business",
-    location: row.Location || "-",
-    type: row.Business_Type || "-",
-    status: row.Status || "-",
-    featured: (row.Featured || "").toUpperCase()
-  };
-}
-
-function createCard(item) {
-  const div = document.createElement("div");
-  div.className = "card" + (item.featured === "YES" ? " featured" : "");
-
-  div.innerHTML = `
-    <h2>${item.name}</h2>
-    <p><strong>Type:</strong> ${item.type}</p>
-    <p><strong>Location:</strong> ${item.location}</p>
-    <p><strong>Status:</strong> ${item.status}</p>
-    ${item.featured === "YES" ? `<span class="badge">Featured</span>` : ""}
-  `;
-
-  return div;
 }
