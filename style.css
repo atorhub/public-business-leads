@@ -54,3 +54,12 @@ h1 {
   color: #777;
   margin-top: 30px;
 }
+.featured-badge {
+  background: #ffcc00;
+  color: #000;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
