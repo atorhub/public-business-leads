@@ -1,25 +1,26 @@
 const SHEET_ID = "1dIaBigZk4nub1NpqygIVOlrZKySHXta_D0YAt31Kn2c";
 const SHEET_NAME = "Public_Directory1";
 
-const SHEET_URL =
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
+const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-fetch(SHEET_URL)
+fetch(URL)
   .then(res => res.text())
   .then(text => {
     const json = JSON.parse(text.substring(47).slice(0, -2));
 
-    const cols = json.table.cols.map(c => c.label.trim());
     const rows = json.table.rows;
 
-    // Map header names to column indexes (CRITICAL FIX)
-    const colIndex = {};
-    cols.forEach((name, i) => colIndex[name] = i);
+    // 🧠 FIRST ROW = HEADERS (MANUAL, RELIABLE)
+    const headers = rows[0].c.map(c => c?.v?.toString().trim());
 
-    const businesses = rows.map(row => {
+    const index = {};
+    headers.forEach((h, i) => index[h] = i);
+
+    // DATA STARTS FROM ROW 2
+    const businesses = rows.slice(1).map(r => {
       const get = key =>
-        row.c[colIndex[key]] && row.c[colIndex[key]].v
-          ? row.c[colIndex[key]].v
+        r.c[index[key]] && r.c[index[key]].v
+          ? r.c[index[key]].v
           : "";
 
       return {
@@ -27,44 +28,36 @@ fetch(SHEET_URL)
         location: get("Location"),
         type: get("Business_Type"),
         status: get("Status"),
-        featured: get("Featured").toString().toUpperCase() === "YES"
+        featured: get("Featured").toUpperCase() === "YES"
       };
     });
 
-    // 🔥 FEATURED FIRST (PIN TO TOP)
-    businesses.sort((a, b) => {
-      if (a.featured && !b.featured) return -1;
-      if (!a.featured && b.featured) return 1;
-      return 0;
-    });
+    // ⭐ FEATURED FIRST
+    businesses.sort((a, b) => b.featured - a.featured);
 
-    renderBusinesses(businesses);
+    render(businesses);
   })
   .catch(err => {
-    console.error("Sheet load failed:", err);
+    console.error(err);
     document.getElementById("directory").innerHTML =
       "<p>Failed to load directory</p>";
   });
 
-function renderBusinesses(list) {
-  const container = document.getElementById("directory");
-  container.innerHTML = "";
+function render(list) {
+  const el = document.getElementById("directory");
+  el.innerHTML = "";
 
-  list.forEach(biz => {
-    const card = document.createElement("div");
-    card.className = "business-card";
-
-    card.innerHTML = `
-      <h2>
-        ${biz.name || "Unnamed Business"}
-        ${biz.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
-      </h2>
-
-      <p><strong>Type:</strong> ${biz.type || "-"}</p>
-      <p><strong>Location:</strong> ${biz.location || "-"}</p>
-      <p><strong>Status:</strong> ${biz.status || "-"}</p>
+  list.forEach(b => {
+    el.innerHTML += `
+      <div class="business-card">
+        <h2>
+          ${b.name || "Unnamed Business"}
+          ${b.featured ? '<span class="featured-badge">FEATURED</span>' : ''}
+        </h2>
+        <p><strong>Type:</strong> ${b.type || "-"}</p>
+        <p><strong>Location:</strong> ${b.location || "-"}</p>
+        <p><strong>Status:</strong> ${b.status || "-"}</p>
+      </div>
     `;
-
-    container.appendChild(card);
   });
 }
