@@ -2,20 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Public Business Directory</title>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <h1>Public Business Directory</h1>
+  <header style="padding:16px; text-align:center;">
+    <h1>Public Business Directory</h1>
+    <p>Verified local businesses</p>
+  </header>
 
-  <div id="directory" class="directory"></div>
+  <!-- ⚠️ THIS ID IS NON-NEGOTIABLE -->
+  <main id="directory" style="padding:16px;">
+    <p>Loading businesses…</p>
+  </main>
 
-  <p class="footer">
-    Data updated automatically · Powered by Google Sheets
-  </p>
-
+  <!-- JS (MUST be at bottom) -->
   <script src="script.js"></script>
 </body>
 </html>
