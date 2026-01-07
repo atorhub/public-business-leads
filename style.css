@@ -1,55 +1,56 @@
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f4f6f8;
+  background: #f5f5f5;
   margin: 0;
   padding: 16px;
 }
 
-/* Centered container like before */
-#directory {
-  max-width: 720px;
-  margin: 0 auto;
-}
-
 h1 {
   text-align: center;
-  font-size: 28px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-/* Bigger, premium cards */
+.directory {
+  max-width: 700px;
+  margin: auto;
+}
+
 .card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
 .card h2 {
-  margin: 0 0 10px;
-  font-size: 22px;
+  margin: 0 0 6px;
+  font-size: 20px;
 }
 
 .card p {
-  margin: 6px 0;
-  font-size: 16px;
+  margin: 4px 0;
   color: #444;
+  font-size: 14px;
 }
 
-/* Featured styling */
-.card.featured {
-  border-left: 6px solid #ff9800;
-}
-
-/* Badge */
 .badge {
   display: inline-block;
   margin-top: 10px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #b71c1c;
-  background: #ffe4e4;
-  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 20px;
+  background: #ffe5e5;
+  color: #b00020;
+}
+
+.featured {
+  border: 2px solid gold;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #777;
+  margin-top: 30px;
 }
